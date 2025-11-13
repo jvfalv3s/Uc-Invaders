@@ -70,6 +70,8 @@ def criar_entidade(x,y, tipo="enemy"):
 
 def criar_bala(x, y, tipo):
     t = turtle.Turtle(visible=False)
+    t.shape("rectangle")
+    t.color("yellow" if tipo == "player" else "red")
     
     print("[criar_bala] por implementar")
     
@@ -105,6 +107,9 @@ def mover_direita_handler():
 
 def disparar_handler():
     print("[disparar_handler] por implementar")
+    state = STATE
+    player = state["player"]
+    ...
 
 def gravar_handler():
     print("[gravar_handler] por implementar")
