@@ -109,7 +109,8 @@ def disparar_handler():
     print("[disparar_handler] por implementar")
     state = STATE
     player = state["player"]
-    ...
+    bullet = criar_bala(player.xcor(), player.ycor(), "player")
+    state["player_bullets"].append(bullet)
 
 def gravar_handler():
     print("[gravar_handler] por implementar")
