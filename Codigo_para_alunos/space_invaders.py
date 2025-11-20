@@ -59,14 +59,11 @@ def carregar_estado_txt(filename):
 # =========================
 def criar_entidade(x,y, tipo="enemy"):
     t = turtle.Turtle(visible=False)
-    if tipo == "player":
-        t.shape("player.gif")
-        t.penup()
-        t.goto(x,y)
-    else:
-        t.shape("enemy.gif")
-        t.penup()
-        t.goto(x,y)
+    t.shape("player.gif" if tipo == "player" else "enemy.gif")
+    if tipo == "enemy":
+        t.setheading(-90)
+    t.penup()
+    t.goto(x,y)
 
     t.showturtle()
     return t 
@@ -75,6 +72,8 @@ def criar_bala(x, y, tipo):
     t = turtle.Turtle(visible=False)
     t.shape("square")
     t.color("yellow" if tipo == "player" else "red")
+    t.shapesize(stretch_wid=0.2, stretch_len=0.8)
+    t.setheading(90 if tipo == "player" else -90)
     t.penup()
     t.goto(x, y)
     t.showturtle()
@@ -101,12 +100,18 @@ def spawn_inimigos_em_grelha(state, posicoes_existentes, dirs_existentes=None):
 
     state["enemies"] = enemies
     state["enemy_moves"] = enemy_moves
-    state["enemy_bullets"] = []
+    state["enemy_bullets"] = [posicoes_existentes, dirs_existentes] if posicoes_existentes else []
     return
 
 
 def restaurar_balas(state, lista_pos, tipo):
-    print("[restaurar_balas] por implementar")
+    #print("[restaurar_balas] por implementar")
+    #restaura balas a partir de lista de posições
+    if tipo == "enemy":
+        state["enemy_bullets"] = [pos for pos in lista_pos]
+    elif tipo == "player":
+        state["player_bullets"] = [pos for pos in lista_pos]
+    return
 
 # =========================
 # Handlers de tecla 
@@ -133,7 +138,6 @@ def disparar_handler():
     player = state["player"]
     bullet = criar_bala(player.xcor(), player.ycor() + 10, "player")
     state["player_bullets"].append(bullet)
-    print("[disparar_handler] por implementar")
 
 def gravar_handler():
     print("[gravar_handler] por implementar")
@@ -143,7 +147,9 @@ def gravar_handler():
 def terminar_handler():
     print("[terminar_handler] por implementar")
     #chama a funcao pra fechar o jogo
-    #turtle.bye()
+    if STATE is not None:
+        atualizar_highscores(STATE["files"]["highscores"], STATE["score"])
+        turtle.bye()
 
 
 
@@ -152,6 +158,14 @@ def terminar_handler():
 # =========================
 def atualizar_balas_player(state):
     print("[atualizar_balas_player] por implementar")
+    for bullet in state["player_bullets"]:
+        #atualiza a posicao da bala com o speed + foward
+        bullet.forward(PLAYER_BULLET_SPEED)
+        #se a bala sair do ecra, remove-a da lista e esconde-a
+        if bullet.ycor() > BORDA_Y:
+            bullet.hideturtle()
+            state["player_bullets"].remove(bullet)
+
 
 def atualizar_balas_inimigos(state):
     print("[atualizar_balas_inimigos] por implementar")
