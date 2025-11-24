@@ -34,6 +34,8 @@ TOP_N = 10
 
 STATE = None  # usado apenas para callbacks do teclado
 
+#ao terminar uma implementacao usar o # no lugar do print
+
 # =========================
 # Top Resultados (Highscores)
 # =========================
@@ -145,7 +147,7 @@ def gravar_handler():
     guardar_estado_txt(SAVE_FILE, STATE)
 
 def terminar_handler():
-    print("[terminar_handler] por implementar")
+    #print("[terminar_handler] por implementar")
     #chama a funcao pra fechar o jogo
     if STATE is not None:
         atualizar_highscores(STATE["files"]["highscores"], STATE["score"])
@@ -157,7 +159,7 @@ def terminar_handler():
 # Atualizações e colisões
 # =========================
 def atualizar_balas_player(state):
-    print("[atualizar_balas_player] por implementar")
+    #print("[atualizar_balas_player] por implementar")
     for bullet in state["player_bullets"]:
         #atualiza a posicao da bala com o speed + foward
         bullet.forward(PLAYER_BULLET_SPEED)
@@ -168,13 +170,55 @@ def atualizar_balas_player(state):
 
 
 def atualizar_balas_inimigos(state):
-    print("[atualizar_balas_inimigos] por implementar")
+    #print("[atualizar_balas_inimigos] por implementar")
+    for bullet in state["enemy_bullets"]:
+        # Atualiza a posição da bala com o speed + forward
+        bullet.forward(ENEMY_BULLET_SPEED)
+        # Se a bala sair do ecrã, remove-a da lista e esconde-a
+        if bullet.ycor() < -BORDA_Y:
+            bullet.hideturtle()
+            state["enemy_bullets"].remove(bullet)
 
 def atualizar_inimigos(state):
-    print("[atualizar_inimigos] por implementar")
+    #print("[atualizar_inimigos] por implementar")
+    enemies = state["enemies"]
+    enemy_moves = state["enemy_moves"]
+    
+    for i, enemy in enumerate(enemies):
+        # Move o inimigo para baixo constantemente
+        enemy.sety(enemy.ycor() - ENEMY_FALL_SPEED)
+        
+        # Verifica se o inimigo deve se mover lateralmente (chance aleatória)
+        if random.random() < ENEMY_DRIFT_CHANCE:
+            # Move o inimigo na direção atual (independentemente)
+            novo_x = enemy.xcor() + enemy_moves[i] * ENEMY_DRIFT_STEP
+            
+            # Verifica se o novo x está dentro dos limites
+            if novo_x > BORDA_X - ENEMY_SIZE:
+                novo_x = BORDA_X - ENEMY_SIZE
+                enemy_moves[i] = -1  # Inverte para esquerda
+            elif novo_x < -BORDA_X + ENEMY_SIZE:
+                novo_x = -BORDA_X + ENEMY_SIZE
+                enemy_moves[i] = 1  # Inverte para direita
+            
+            enemy.setx(novo_x)
+        
+        # O inimigo pode inverter a direção aleatoriamente
+        if random.random() < ENEMY_INVERT_CHANCE:
+            enemy_moves[i] *= -1
+    
+    state["enemies"] = enemies
+    state["enemy_moves"] = enemy_moves
+    return
 
 def inimigos_disparam(state):
-    print("[inimigos_disparam] por implementar")
+    #print("[inimigos_disparam] por implementar")
+    enemies = state["enemies"]
+    for enemy in enemies:
+        if random.random() < ENEMY_FIRE_PROB:
+            bullet = criar_bala(enemy.xcor(), enemy.ycor() - 10, "enemy")
+            state["enemy_bullets"].append(bullet)
+    return
 
 def verificar_colisoes_player_bullets(state):
     print("[verificar_colisoes_player_bullets] por implementar")
@@ -183,7 +227,13 @@ def verificar_colisoes_enemy_bullets(state):
     print("[verificar_colisoes_enemy_bullets] por implementar")
 
 def inimigo_chegou_ao_fundo(state):
-    print("[inimigo_chegou_ao_fundo] por implementar")
+    #print("[inimigo_chegou_ao_fundo] por implementar")
+    state = STATE
+    enemies = state["enemies"]
+    for enemy in enemies:
+        if enemy.ycor() <= -BORDA_Y + ENEMY_SIZE:
+            return True
+    return False
 
 def verificar_colisao_player_com_inimigos(state):
     print("[verificar_colisao_player_com_inimigos] por implementar")
