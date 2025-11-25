@@ -50,6 +50,8 @@ def atualizar_highscores(filename, score):
 # =========================
 def guardar_estado_txt(filename, state):
     print("[guardar_estado_txt] por implementar")
+    #guardar dados no ficheiro de texto savegame.txt ao pressionar a tecla g
+    return
 
 def carregar_estado_txt(filename):
     print("[carregar_estado_txt] por implementar")
@@ -143,7 +145,7 @@ def disparar_handler():
 
 def gravar_handler():
     print("[gravar_handler] por implementar")
-    #ao precionar a tecla g, grava TODOS os dados do estado atual para um ficheiro de texto
+    #ao precionar a tecla g, grava TODOS os dados do estado atual para um ficheiro de texto?
     guardar_estado_txt(SAVE_FILE, STATE)
 
 def terminar_handler():
