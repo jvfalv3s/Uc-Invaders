@@ -41,9 +41,12 @@ STATE = None  # usado apenas para callbacks do teclado
 # =========================
 def ler_highscores(filename):
     print("[ler_highscores] por implementar")
+    #ler o ficheiro de highscores e retornar uma lista de tuplos (nome, score)
 
 def atualizar_highscores(filename, score):
     print("[atualizar_highscores] por implementar")
+    #atualizar o ficheiro de highscores com o score atual se for um dos TOP_N
+    
 
 # =========================
 # Guardar / Carregar estado (texto)
@@ -51,7 +54,8 @@ def atualizar_highscores(filename, score):
 def guardar_estado_txt(filename, state):
     print("[guardar_estado_txt] por implementar")
     #guardar dados no ficheiro de texto savegame.txt ao pressionar a tecla g
-    return
+    #criar um ficheiro com o nome filename e guardar os dados do state nele
+    
 
 def carregar_estado_txt(filename):
     print("[carregar_estado_txt] por implementar")
@@ -151,6 +155,7 @@ def gravar_handler():
 def terminar_handler():
     #print("[terminar_handler] por implementar")
     #chama a funcao pra fechar o jogo
+    #esse handler ao apertar esc mostra erros no terminal, mas fecha o jogo (foi testado em aula mas nao consegui resolver os erros no terminal)
     if STATE is not None:
         atualizar_highscores(STATE["files"]["highscores"], STATE["score"])
         turtle.bye()
@@ -223,10 +228,37 @@ def inimigos_disparam(state):
     return
 
 def verificar_colisoes_player_bullets(state):
-    print("[verificar_colisoes_player_bullets] por implementar")
+    #print("[verificar_colisoes_player_bullets] por implementar")
+    #verifica se alguma bala do jogador colidiu com algum inimigo
+    state = STATE
+    player_bullets = state["player_bullets"]
+    enemies = state["enemies"]
+    for bullet in player_bullets: #verifica cada bala do jogador
+        for enemy in enemies: #verifica cada inimigo
+            distance = bullet.distance(enemy) #calcula a distancia entre a bala e o inimigo
+            if distance < COLLISION_RADIUS: # se a distancia entre a bala e o inimigo for menor que o raio de colisao
+                # Colisão detectada
+                bullet.hideturtle() #esconde a bala
+                enemy.hideturtle() #esconde o inimigo
+                state["score"] += 10  # Incrementa a pontuação
+                player_bullets.remove(bullet) #remove a bala da lista de balas do jogador
+                enemies.remove(enemy) #remove o inimigo da lista de inimigos
+                return  # Sai da função após a colisão para evitar erros
+
 
 def verificar_colisoes_enemy_bullets(state):
-    print("[verificar_colisoes_enemy_bullets] por implementar")
+    #print("[verificar_colisoes_enemy_bullets] por implementar")
+    state = STATE
+    player = state["player"]
+    enemy_bullets = state["enemy_bullets"]
+    for bullet in enemy_bullets: #verifica cada bala inimiga
+        distance = bullet.distance(player) #calcula a distancia entre a bala e o jogador
+        if distance < COLLISION_RADIUS: # se a distancia entre a bala e o jogador for menor que o raio de colisao
+            # Colisão detectada
+            bullet.hideturtle() #esconde a bala
+            enemy_bullets.remove(bullet) #remove a bala da lista de balas inimigas
+            return True  # Retorna True se houve colisão
+    return False  # Retorna False se não houve colisão
 
 def inimigo_chegou_ao_fundo(state):
     #print("[inimigo_chegou_ao_fundo] por implementar")
@@ -238,7 +270,15 @@ def inimigo_chegou_ao_fundo(state):
     return False
 
 def verificar_colisao_player_com_inimigos(state):
-    print("[verificar_colisao_player_com_inimigos] por implementar")
+    #print("[verificar_colisao_player_com_inimigos] por implementar")
+    state = STATE
+    player = state["player"]
+    enemies = state["enemies"]
+    for enemy in enemies:
+        distance = enemy.distance(player)
+        if distance < COLLISION_RADIUS:
+            return True  # Retorna True se houve colisão
+    return False  # Retorna False se não houve colisão
 
 # =========================
 # Execução principal
