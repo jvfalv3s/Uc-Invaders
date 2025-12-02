@@ -40,27 +40,130 @@ STATE = None  # usado apenas para callbacks do teclado
 # Top Resultados (Highscores)
 # =========================
 def ler_highscores(filename):
-    print("[ler_highscores] por implementar")
-    #ler o ficheiro de highscores e retornar uma lista de tuplos (nome, score)
+    # Ler o ficheiro de highscores e retornar uma lista de tuplos (nome, score).
+    # Função robusta: ignora linhas mal formadas e não tenta fechar um ficheiro
+    # que já foi fechado (removida chamada incorreta a f.close()).
+    highscores = []
+    if not filename:
+        return highscores
+    if os.path.exists(filename):
+        with open(filename, "r") as f:
+            for line in f:
+                parts = line.strip().split()
+                if len(parts) < 2:
+                    continue
+                nome = parts[0]
+                try:
+                    score = int(parts[1])
+                except ValueError:
+                    continue
+                highscores.append((nome, score))
+    highscores = sorted(highscores, key=lambda x: x[1], reverse=True)[:TOP_N]
+    return highscores
 
 def atualizar_highscores(filename, score):
-    print("[atualizar_highscores] por implementar")
-    #atualizar o ficheiro de highscores com o score atual se for um dos TOP_N
-    
+    # Atualiza o ficheiro de highscores com o score atual se for um dos TOP_N.
+    # Não assume que o ficheiro exista; ler_highscores já é robusto.
+    if not filename:
+        return
+    highscores = ler_highscores(filename)
+    if len(highscores) < TOP_N or score > highscores[-1][1]:
+        nome = input("Novo Highscore! Insira o seu nome: ")
+        highscores.append((nome, score))
+        highscores = sorted(highscores, key=lambda x: x[1], reverse=True)[:TOP_N]
+        # Abre em modo write (cria o ficheiro se necessário)
+        with open(filename, "w") as f:
+            for nome, sc in highscores:
+                f.write(f"{nome} {sc}\n")
 
 # =========================
 # Guardar / Carregar estado (texto)
 # =========================
 def guardar_estado_txt(filename, state):
-    print("[guardar_estado_txt] por implementar")
+    #print("[guardar_estado_txt] por implementar")
     #guardar dados no ficheiro de texto savegame.txt ao pressionar a tecla g
     #criar um ficheiro com o nome filename e guardar os dados do state nele
-    
+    with open(filename, "w") as f:
+        #guardar posicao do jogador
+        player = state["player"]
+        f.write(f"PLAYER {player.xcor()} {player.ycor()}\n")
+        
+        #guardar posicoes dos inimigos
+        enemies = state["enemies"]
+        f.write("ENEMIES\n")
+        for enemy in enemies:
+            f.write(f"{enemy.xcor()} {enemy.ycor()}\n")
+
+        #guardar movimentos dos inimigos
+        enemy_moves = state["enemy_moves"]
+        f.write("ENEMY_MOVES\n")
+        for move in enemy_moves:
+            f.write(f"{move}\n")
+
+        #guardar balas do jogador
+        player_bullets = state["player_bullets"]
+        f.write("PLAYER_BULLETS\n")
+        for bullet in player_bullets:
+            f.write(f"{bullet.xcor()} {bullet.ycor()}\n")
+        
+        #guardar balas dos inimigos
+        enemy_bullets = state["enemy_bullets"]
+        f.write("ENEMY_BULLETS\n")
+        for bullet in enemy_bullets:
+            f.write(f"{bullet.xcor()} {bullet.ycor()}\n")
+
+    # O 'with' já fecha o ficheiro; não é necessário chamar f.close()
 
 def carregar_estado_txt(filename):
-    print("[carregar_estado_txt] por implementar")
-    # Por enquanto sempre retorna False (novo jogo)
-    return False
+    #print("[carregar_estado_txt] por implementar")
+    #carregar dados do ficheiro de texto savegame.txt ao iniciar o jogo
+    #se o ficheiro nao existir, retorna False
+    if not filename or not os.path.exists(filename):
+        return False
+    else:
+        with open(filename, "r") as f:
+            lines = f.readlines()
+        state = STATE
+        enemies = []
+        enemy_moves = []
+        player_bullets = []
+        enemy_bullets = []
+        section = None
+
+        for line in lines:
+            line = line.strip()
+            if line.startswith("PLAYER"):
+                _, x, y = line.split()
+                state["player"] = criar_entidade(float(x), float(y), "player")
+            elif line == "ENEMIES":
+                section = "ENEMIES"
+            elif line == "ENEMY_MOVES":
+                section = "ENEMY_MOVES"
+            elif line == "PLAYER_BULLETS":
+                section = "PLAYER_BULLETS"
+            elif line == "ENEMY_BULLETS":
+                section = "ENEMY_BULLETS"
+            else:
+                if section == "ENEMIES":
+                    x, y = map(float, line.split())
+                    enemy = criar_entidade(x, y, "enemy")
+                    enemies.append(enemy)
+                elif section == "ENEMY_MOVES":
+                    move = int(line)
+                    enemy_moves.append(move)
+                elif section == "PLAYER_BULLETS":
+                    x, y = map(float, line.split())
+                    bullet = criar_bala(x, y, "player")
+                    player_bullets.append(bullet)
+                elif section == "ENEMY_BULLETS":
+                    x, y = map(float, line.split())
+                    bullet = criar_bala(x, y, "enemy")
+                    enemy_bullets.append(bullet)
+        state["enemies"] = enemies
+        state["enemy_moves"] = enemy_moves
+        state["player_bullets"] = player_bullets
+        state["enemy_bullets"] = enemy_bullets  
+    return True
 
 # =========================
 # Criação de entidades (jogador, inimigo e balas)
@@ -153,16 +256,20 @@ def gravar_handler():
     guardar_estado_txt(SAVE_FILE, STATE)
 
 def terminar_handler():
-    #print("[terminar_handler] por implementar")
-    #chama a funcao pra fechar o jogo
-    #esse handler ao apertar esc mostra erros no terminal, mas fecha o jogo (foi testado em aula mas nao consegui resolver os erros no terminal)
+    # Fecha o jogo e atualiza os highscores antes de sair.
+    # Usa a variável global STATE corretamente e trata exceções.
+    global STATE
     if STATE is not None:
-        #atualizar_highscores(STATE["files"]["highscores"], STATE["score"])
+        # Tenta atualizar highscores (cria o ficheiro se necessário)
         try:
-            state["screen"].bye()
+            atualizar_highscores(STATE["files"]["highscores"], STATE["score"])
+        except Exception as e:
+            print("Erro ao atualizar highscores:", e)
+        try:
+            STATE["screen"].bye()
         except turtle.Terminator:
             pass
-        exit()
+    sys.exit(0)
 
 
 
