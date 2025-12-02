@@ -157,8 +157,12 @@ def terminar_handler():
     #chama a funcao pra fechar o jogo
     #esse handler ao apertar esc mostra erros no terminal, mas fecha o jogo (foi testado em aula mas nao consegui resolver os erros no terminal)
     if STATE is not None:
-        atualizar_highscores(STATE["files"]["highscores"], STATE["score"])
-        turtle.bye()
+        #atualizar_highscores(STATE["files"]["highscores"], STATE["score"])
+        try:
+            state["screen"].bye()
+        except turtle.Terminator:
+            pass
+        exit()
 
 
 
