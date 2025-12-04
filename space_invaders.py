@@ -53,7 +53,6 @@ def guardar_estado_txt(filename, state):
     print("[guardar_estado_txt] por implementar")
     state = STATE
     
-
     player = state["player"] #não é lista, os outros são 
     inimigos = state["enemies"]
     movimento_inimigo = state["enemy_moves"]
@@ -69,23 +68,30 @@ def guardar_estado_txt(filename, state):
         
         save.write("\nInimigos:")
         for inimigo in inimigos:
-           inimigo = inimigos.strip().pos()
-           save.write(inimigo)
+            pos_x_in = inimigo.xcor()
+            pos_y_in = inimigo.ycor()
+            save.write(f"pos_in: {pos_x_in} {pos_y_in}")
+
 
         save.write("\nMovimento inimigo:")
         for movimento in movimento_inimigo:
-            movimento = movimento_inimigo.strip().pos()
-            save.write(movimento)
+            
+
+            
 
         save.write("\nBalas inimigas:")
         for Bin in bala_inimigos:
-            Bin = bala_inimigos.strip().pos()
-            save.write(Bin)
+            pos_x_bin = Bin.xcor()
+            pos_y_bin = Bin.ycor()
+
+            save.write(f"pos_bin: {pos_x_bin} {pos_y_bin}")
 
         save.write("\nBalas player:")
         for Bpl in balas_player:
-            Bpl = balas_player.strip().pos()
-            save.write(Bpl)
+            pos_x_Bpl = Bpl.xcor()
+            pos_y_Bpl = Bpl.ycor()
+
+            save.write(f"pos_bpl: {pos_x_Bpl} {pos_y_Bpl}")
 
         save.write("\nscore:")
         for num_pontos in pontos:
@@ -98,25 +104,39 @@ def guardar_estado_txt(filename, state):
 def carregar_estado_txt(filename):
     print("[carregar_estado_txt] por implementar")
     
-    
+    save_player = []
+    save_inimigos = []
+    save_movimento_inimigo = []
+    save_balas_inimigas = []
+    save_balas_player = []
+    save_score = []
+    save_frame = []
+
     
     with open('save_file.txt', 'r') as save:
         dado = save.readlines()
         if dado.startswith("player:"):
-            dado = player
+            dado = save_player
+        
         elif dado.startswith("inimigos:"):
-            dado = inimigos 
+            dado = save_inimigos
+        
         elif dado.startswith("Movimento inimigos:"):
             dado = movimento_inimigo
+        
         elif dado.startswith("Balas inimigas:"):
             dado = bala_inimigos
+        
         elif dado.startswith("Balas player:"):
             dado = balas_player
+        
         elif dado.startswith("score:"):
             dados = pontos
+        
         elif dados.startwith("frame:"):
             dados = frames
         
+    
 # =========================
 # Criação de entidades (jogador, inimigo e balas)
 # =========================
