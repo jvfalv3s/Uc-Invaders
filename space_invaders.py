@@ -69,30 +69,22 @@ def guardar_estado_txt(filename, state):
             pos_y_in = inimigo.ycor()
             save.write(f"pos_in: {pos_x_in} {pos_y_in}\n")
 
-
         for movimento in movimento_inimigo:
-            
-
-
-            
+            proximo_movimento = str(movimento)
+            save.write(f"movimento: {proximo_movimento}\n")
 
         for Bin in bala_inimigos:
             pos_x_bin = Bin.xcor()
             pos_y_bin = Bin.ycor()
-
             save.write(f"pos_bin: {pos_x_bin} {pos_y_bin}\n")
 
         for Bpl in balas_player:
             pos_x_Bpl = Bpl.xcor()
             pos_y_Bpl = Bpl.ycor()
-
             save.write(f"pos_bpl: {pos_x_Bpl} {pos_y_Bpl}")
 
-        for num_pontos in pontos:
-            save.write(num_pontos)
-
-        for frame in frames:
-            save.write(frame)
+        save.write(pontos)
+        save.write(frames)
 
 def carregar_estado_txt(filename):
     print("[carregar_estado_txt] por implementar")
@@ -108,19 +100,19 @@ def carregar_estado_txt(filename):
     
     with open('save_file.txt', 'r') as save:
         dado = save.readlines()
-        if dado.startswith("player:"):
+        if dado.startswith("pos_player:"):
             dado = save_player
         
-        elif dado.startswith("inimigos:"):
+        elif dado.startswith("pos_in:"):
             dado = save_inimigos
         
-        elif dado.startswith("Movimento inimigos:"):
+        elif dado.startswith("movimento:"):
             dado = movimento_inimigo
         
-        elif dado.startswith("Balas inimigas:"):
+        elif dado.startswith("pos_bin:"):
             dado = bala_inimigos
         
-        elif dado.startswith("Balas player:"):
+        elif dado.startswith("pos_bpl:"):
             dado = balas_player
         
         elif dado.startswith("score:"):
