@@ -62,42 +62,35 @@ def guardar_estado_txt(filename, state):
     frames = state["frames"]
 
     with open('save.file.txt', 'w') as save:
-        save.write("player:")
-        pos_player = player.pos()
-        save.write(pos_player)
+        save.write(f"pos_player: {player.pos()}\n")
         
-        save.write("\nInimigos:")
         for inimigo in inimigos:
             pos_x_in = inimigo.xcor()
             pos_y_in = inimigo.ycor()
-            save.write(f"pos_in: {pos_x_in} {pos_y_in}")
+            save.write(f"pos_in: {pos_x_in} {pos_y_in}\n")
 
 
-        save.write("\nMovimento inimigo:")
         for movimento in movimento_inimigo:
             
 
+
             
 
-        save.write("\nBalas inimigas:")
         for Bin in bala_inimigos:
             pos_x_bin = Bin.xcor()
             pos_y_bin = Bin.ycor()
 
-            save.write(f"pos_bin: {pos_x_bin} {pos_y_bin}")
+            save.write(f"pos_bin: {pos_x_bin} {pos_y_bin}\n")
 
-        save.write("\nBalas player:")
         for Bpl in balas_player:
             pos_x_Bpl = Bpl.xcor()
             pos_y_Bpl = Bpl.ycor()
 
             save.write(f"pos_bpl: {pos_x_Bpl} {pos_y_Bpl}")
 
-        save.write("\nscore:")
         for num_pontos in pontos:
             save.write(num_pontos)
 
-        save.write("\nframe:")
         for frame in frames:
             save.write(frame)
 
