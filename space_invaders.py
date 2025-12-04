@@ -69,18 +69,22 @@ def guardar_estado_txt(filename, state):
         
         save.write("\nInimigos:")
         for inimigo in inimigos:
+           inimigo = inimigos.strip().pos()
            save.write(inimigo)
 
         save.write("\nMovimento inimigo:")
         for movimento in movimento_inimigo:
+            movimento = movimento_inimigo.strip().pos()
             save.write(movimento)
 
         save.write("\nBalas inimigas:")
         for Bin in bala_inimigos:
+            Bin = bala_inimigos.strip().pos()
             save.write(Bin)
 
         save.write("\nBalas player:")
         for Bpl in balas_player:
+            Bpl = balas_player.strip().pos()
             save.write(Bpl)
 
         save.write("\nscore:")
