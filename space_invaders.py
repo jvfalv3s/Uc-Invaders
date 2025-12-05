@@ -53,7 +53,7 @@ def guardar_estado_txt(filename, state):
     print("[guardar_estado_txt] por implementar")
     state = STATE
     
-    player = state["player"] #não é lista, os outros são 
+    player = state["player"]  
     inimigos = state["enemies"]
     movimento_inimigo = state["enemy_moves"]
     balas_player = state["player_bullets"]
@@ -61,7 +61,7 @@ def guardar_estado_txt(filename, state):
     pontos = state["score"]
     frames = state["frames"]
 
-    with open('save.file.txt', 'w') as save:
+    with open('savegame.txt', 'w') as save:
         save.write(f"pos_player: {player.pos()}\n")
         
         for inimigo in inimigos:
@@ -83,12 +83,12 @@ def guardar_estado_txt(filename, state):
             pos_y_Bpl = Bpl.ycor()
             save.write(f"pos_bpl: {pos_x_Bpl} {pos_y_Bpl}")
 
-        save.write(pontos)
-        save.write(frames)
+        save.write(f"socore: {pontos}\n")
+        save.write(f"frame_atual: {frames}")
 
 def carregar_estado_txt(filename):
     print("[carregar_estado_txt] por implementar")
-    
+
     save_player = []
     save_inimigos = []
     save_movimento_inimigo = []
@@ -98,10 +98,11 @@ def carregar_estado_txt(filename):
     save_frame = []
 
     
-    with open('save_file.txt', 'r') as save:
+    with open('savegame.txt', 'r') as save:
         dado = save.readlines()
         if dado.startswith("pos_player:"):
-            dado = save_player
+            
+            
         
         elif dado.startswith("pos_in:"):
             dado = save_inimigos
