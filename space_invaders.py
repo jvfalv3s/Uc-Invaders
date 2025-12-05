@@ -38,13 +38,36 @@ STATE = None  # usado apenas para callbacks do teclado
 # Top Resultados (Highscores)
 # =========================
 def ler_highscores(filename):
-    print("[ler_highscores] por implementar") 
-    ficheiro = open('highscore.txt', 'r')
-
-    
-
+    print("[ler_highscores] por implementar")
+    highscores = []
+    if not filename:
+        return highscores
+    if os.path.exists(filename):
+        with open(filename, "r") as f:
+            for line in f:
+                parts = line.strip().split()
+                if len(parts) < 2:
+                    continue
+                nome = parts[0]
+                try:
+                    score = int(parts[1])
+                except ValueError:
+                    continue
+                highscores.append((nome, score))
+    highscores = sorted(highscores, key=lambda x: x[1], reverse=True)[:TOP_N]
+    return highscores
 def atualizar_highscores(filename, score):
     print("[atualizar_highscores] por implementar")
+    if not filename:
+        return
+    highscores = ler_highscores(filename)
+    if len(highscores) < TOP_N or score > highscores[-1][1]:
+        nome = input("Novo Highscore! Insira o seu nome: ")
+        highscores.append((nome, score))
+        highscores = sorted(highscores, key=lambda x: x[1], reverse=True)[:TOP_N]
+        with open(filename, "w") as f:
+            for nome, sc in highscores:
+                f.write(f"{nome} {sc}\n")
 
 # =========================
 # Guardar / Carregar estado (texto)
@@ -101,26 +124,25 @@ def carregar_estado_txt(filename):
     with open('savegame.txt', 'r') as save:
         dado = save.readlines()
         if dado.startswith("pos_player:"):
-            
-            
+            save_player.append(dado)
         
         elif dado.startswith("pos_in:"):
-            dado = save_inimigos
+            save_inimigos.append(dado)
         
         elif dado.startswith("movimento:"):
-            dado = movimento_inimigo
+            save_movimento_inimigo.append(dado)
         
         elif dado.startswith("pos_bin:"):
-            dado = bala_inimigos
+            save_balas_inimigas.append(dado)
         
         elif dado.startswith("pos_bpl:"):
-            dado = balas_player
+            save_balas_player.append(dado)
         
         elif dado.startswith("score:"):
-            dados = pontos
+            save_score.append(dado)
         
-        elif dados.startwith("frame:"):
-            dados = frames
+        elif dado.startwith("frame:"):
+            save_frame.append(dado)
         
     
 # =========================
@@ -143,16 +165,48 @@ def criar_bala(x, y, tipo):
     t = turtle.Turtle(visible=False)
     
     print("[criar_bala] por implementar")
-    
+    t = turtle.Turtle(visible=False)
+    t.shape("square")
+    t.color("yellow" if tipo == "player" else "red")
+    t.shapesize(stretch_wid=0.2, stretch_len=0.8)
+    t.setheading(90 if tipo == "player" else -90)
+    t.penup()
+    t.goto(x, y)
     t.showturtle()
     return t
 
 def spawn_inimigos_em_grelha(state, posicoes_existentes, dirs_existentes=None):
     print("[spawn_inimigos_em_grelha] por implementar")
 
+    enemies = []
+    enemy_moves = []
+    
+    # Calcula posição inicial para centralizar a grelha
+    start_x = -((ENEMY_COLS - 1) * ENEMY_SPACING_X) / 2
+    start_y = ENEMY_START_Y
+    
+    # Cria inimigos em grelha
+    for row in range(ENEMY_ROWS):
+        for col in range(ENEMY_COLS):
+            x = start_x + col * ENEMY_SPACING_X
+            y = start_y - row * ENEMY_SPACING_Y
+            
+            # Cria inimigo usando a função criar_entidade
+            enemy = criar_entidade(x, y, "enemy")
+            enemies.append(enemy)
+            enemy_moves.append(1)
 
+    state["enemies"] = enemies
+    state["enemy_moves"] = enemy_moves
+    state["enemy_bullets"] = [posicoes_existentes, dirs_existentes] if posicoes_existentes else []
+    return
 def restaurar_balas(state, lista_pos, tipo):
     print("[restaurar_balas] por implementar")
+    if tipo == "enemy":
+        state["enemy_bullets"] = [pos for pos in lista_pos]
+    elif tipo == "player":
+        state["player_bullets"] = [pos for pos in lista_pos]
+    return
 
 # =========================
 # Handlers de tecla 
@@ -179,12 +233,29 @@ def mover_direita_handler():
 
 def disparar_handler():
     print("[disparar_handler] por implementar")
+    state = STATE
+    player = state["player"]
+    bullet = criar_bala(player.xcor(), player.ycor() + 10, "player")
+    state["player_bullets"].append(bullet)
 
 def gravar_handler():
     print("[gravar_handler] por implementar")
+    global STATE
+    guardar_estado_txt(SAVE_FILE, STATE)
 
 def terminar_handler():
     print("[terminar_handler] por implementar")
+    global STATE
+    if STATE is not None:
+        try:
+            atualizar_highscores(STATE["files"]["highscores"], STATE["score"])
+        except Exception as e:
+            print("Erro ao atualizar highscores:", e)
+        try:
+            STATE["screen"].bye()
+        except turtle.Terminator:
+            pass
+    sys.exit(0)
 
 # =========================
 # Atualizações e colisões
@@ -203,10 +274,36 @@ def atualizar_balas_inimigos(state):
        
 def atualizar_inimigos(state):
     print("[atualizar_inimigos] por implementar")
-    movimento_inimigo = state["enemies"]
+    enemies = state["enemies"]
+    enemy_moves = state["enemy_moves"]
     
-       
-   
+    for i, enemy in enumerate(enemies):
+        # Move o inimigo para baixo constantemente
+        enemy.sety(enemy.ycor() - ENEMY_FALL_SPEED)
+        
+        # Verifica se o inimigo deve se mover lateralmente (chance aleatória)
+        if random.random() < ENEMY_DRIFT_CHANCE:
+            # Move o inimigo na direção atual (independentemente)
+            novo_x = enemy.xcor() + enemy_moves[i] * ENEMY_DRIFT_STEP
+            
+            # Verifica se o novo x está dentro dos limites
+            if novo_x > BORDA_X - ENEMY_SIZE:
+                novo_x = BORDA_X - ENEMY_SIZE
+                enemy_moves[i] = -1  # Inverte para esquerda
+            elif novo_x < -BORDA_X + ENEMY_SIZE:
+                novo_x = -BORDA_X + ENEMY_SIZE
+                enemy_moves[i] = 1  # Inverte para direita
+            
+            enemy.setx(novo_x)
+        
+        # O inimigo pode inverter a direção aleatoriamente
+        if random.random() < ENEMY_INVERT_CHANCE:
+            enemy_moves[i] *= -1
+    
+    state["enemies"] = enemies
+    state["enemy_moves"] = enemy_moves
+    return
+
 def inimigos_disparam(state):
     print("[inimigos_disparam] por implementar")
     
@@ -217,35 +314,38 @@ def verificar_colisoes_player_bullets(state):
     
     
 def verificar_colisoes_enemy_bullets(state):
-    print("[verificar_colisoes_enemy_bullets] por implementar")
-    inimigos = state["enemies"]
-    balas_player = state["player_bullets"]
-    distancia = turtle.distance(inimigo, balas_player)
-    for inimigo in inimigos:
-        if distancia < COLLISION_RADIUS:
-            turtle.clear(inimigo)    
-            
+    state = STATE
+    player = state["player"]
+    enemy_bullets = state["enemy_bullets"]
+    for bullet in enemy_bullets: 
+        distance = bullet.distance(player) 
+        if distance < COLLISION_RADIUS: 
+            bullet.hideturtle() 
+            enemy_bullets.remove(bullet) 
+            return True  
+    return False 
+           
 def inimigo_chegou_ao_fundo(state):
-    print("[inimigo_chegou_ao_fundo] por implementar")
-    inimigos = state["enemies"]
-    for inimigo in inimigos:
-        if inimigo.ycor() < -400:
-            screen.update() = 0
-     
+    state = STATE
+    enemies = state["enemies"]
+    for enemy in enemies:
+        if enemy.ycor() <= -BORDA_Y + ENEMY_SIZE:
+            return True
+    return False
+
 def verificar_colisao_player_com_inimigos(state):
-    print("[verificar_colisao_player_com_inimigos] por implementar")
-    p_player = state["player"]
-    p_inimigos = state["enemies"]
-    distancia = turtle.distance(player, p_inimigos)
-    for player in p_player:
-        if distancia < COLLISION_RADIUS:
-            screen.update() = 0
-            
-
-            
-
     
-    
+    state = STATE
+    player = state["player"]
+    enemies = state["enemies"]
+    for enemy in enemies:
+        dx = player.xcor() - enemy.xcor()
+        dy = player.ycor() - enemy.ycor()
+        distance = (dx**2 + dy**2)**0.5
+        if distance < COLLISION_RADIUS:
+            return True 
+    return False 
+
 # =========================
 # Execução principal
 # =========================
