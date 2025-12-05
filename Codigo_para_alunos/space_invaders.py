@@ -123,19 +123,20 @@ def carregar_estado_txt(filename):
     else:
         with open(filename, "r") as f:
             lines = f.readlines()
-        state = STATE
         enemies = []
         enemy_moves = []
         player_bullets = []
         enemy_bullets = []
         section = None
+        player = None
 
         for line in lines:
             line = line.strip()
-            if line.startswith("PLAYER"):
-                _, x, y = line.split()
-                state["player"] = criar_entidade(float(x), float(y), "player")
-            elif line == "ENEMIES":
+            if not line:  # Ignorar linhas vazias
+                continue
+            
+            # Detectar cabeçalho de seção
+            if line == "ENEMIES":
                 section = "ENEMIES"
             elif line == "ENEMY_MOVES":
                 section = "ENEMY_MOVES"
@@ -143,26 +144,35 @@ def carregar_estado_txt(filename):
                 section = "PLAYER_BULLETS"
             elif line == "ENEMY_BULLETS":
                 section = "ENEMY_BULLETS"
-            else:
-                if section == "ENEMIES":
-                    x, y = map(float, line.split())
-                    enemy = criar_entidade(x, y, "enemy")
-                    enemies.append(enemy)
-                elif section == "ENEMY_MOVES":
-                    move = int(line)
-                    enemy_moves.append(move)
-                elif section == "PLAYER_BULLETS":
-                    x, y = map(float, line.split())
-                    bullet = criar_bala(x, y, "player")
-                    player_bullets.append(bullet)
-                elif section == "ENEMY_BULLETS":
-                    x, y = map(float, line.split())
-                    bullet = criar_bala(x, y, "enemy")
-                    enemy_bullets.append(bullet)
-        state["enemies"] = enemies
-        state["enemy_moves"] = enemy_moves
-        state["player_bullets"] = player_bullets
-        state["enemy_bullets"] = enemy_bullets  
+            # Processar dados do jogador na primeira linha
+            elif line.startswith("PLAYER"):
+                parts = line.split()
+                player = criar_entidade(float(parts[1]), float(parts[2]), "player")
+            # Processar dados de inimigos
+            elif section == "ENEMIES":
+                x, y = map(float, line.split())
+                enemy = criar_entidade(x, y, "enemy")
+                enemies.append(enemy)
+            # Processar movimentos dos inimigos
+            elif section == "ENEMY_MOVES":
+                move = int(line)
+                enemy_moves.append(move)
+            # Processar balas do jogador
+            elif section == "PLAYER_BULLETS":
+                x, y = map(float, line.split())
+                bullet = criar_bala(x, y, "player")
+                player_bullets.append(bullet)
+            # Processar balas dos inimigos
+            elif section == "ENEMY_BULLETS":
+                x, y = map(float, line.split())
+                bullet = criar_bala(x, y, "enemy")
+                enemy_bullets.append(bullet)
+        
+        STATE["player"] = player
+        STATE["enemies"] = enemies
+        STATE["enemy_moves"] = enemy_moves
+        STATE["player_bullets"] = player_bullets
+        STATE["enemy_bullets"] = enemy_bullets  
     return True
 
 # =========================
@@ -251,8 +261,9 @@ def disparar_handler():
     state["player_bullets"].append(bullet)
 
 def gravar_handler():
-    print("[gravar_handler] por implementar")
+    #print("[gravar_handler] por implementar")
     #ao precionar a tecla g, grava TODOS os dados do estado atual para um ficheiro de texto?
+    global STATE
     guardar_estado_txt(SAVE_FILE, STATE)
 
 def terminar_handler():
@@ -386,7 +397,10 @@ def verificar_colisao_player_com_inimigos(state):
     player = state["player"]
     enemies = state["enemies"]
     for enemy in enemies:
-        distance = enemy.distance(player)
+        # Calcular distância manualmente
+        dx = player.xcor() - enemy.xcor()
+        dy = player.ycor() - enemy.ycor()
+        distance = (dx**2 + dy**2)**0.5
         if distance < COLLISION_RADIUS:
             return True  # Retorna True se houve colisão
     return False  # Retorna False se não houve colisão
@@ -397,7 +411,6 @@ def verificar_colisao_player_com_inimigos(state):
 if __name__ == "__main__":
     # Pergunta inicial: carregar?
     filename = input("Carregar jogo? Se sim, escreva nome do ficheiro, senão carregue Return: ").strip()
-    loaded = carregar_estado_txt(filename)
 
     # Ecrã
     screen = turtle.Screen()
@@ -426,17 +439,17 @@ if __name__ == "__main__":
         "files": {"highscores": HIGHSCORES_FILE, "save": SAVE_FILE}
     }
 
+    # Variavel global para os keyboard key handlers
+    STATE = state
+
     # Construção inicial
+    loaded = carregar_estado_txt(filename)
     if loaded:
-        print("[loaded=True] por implementar")
-        #modificar o STATE com os dados carregados
+        print("Jogo carregado!")
     else:
         print("New game!")
         state["player"] = criar_entidade(0, -350,"player")
         spawn_inimigos_em_grelha(state, None, None)
-
-    # Variavel global para os keyboard key handlers
-    STATE = state
 
     # Teclas
     screen.listen()
