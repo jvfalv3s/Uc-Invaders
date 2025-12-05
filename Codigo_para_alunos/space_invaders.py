@@ -25,7 +25,7 @@ ENEMY_COLS = 10
 ENEMY_SPACING_X = 60
 ENEMY_SPACING_Y = 60
 ENEMY_SIZE = 32
-ENEMY_START_Y = BORDA_Y - ENEMY_SIZE    # topo visível
+ENEMY_START_Y = BORDA_Y - ENEMY_SIZE
 ENEMY_FALL_SPEED = 0.5
 ENEMY_DRIFT_STEP = 2
 ENEMY_FIRE_PROB = 0.006
@@ -38,7 +38,7 @@ HIGHSCORES_FILE = "highscores.txt"
 SAVE_FILE = "savegame.txt"
 TOP_N = 10
 
-STATE = None  # usado apenas para callbacks do teclado
+STATE = None
 
 # =========================
 # Top Resultados (Highscores)
@@ -48,30 +48,30 @@ def ler_highscores(filename):
     highscores = []
     if not filename:
         return highscores
-    if os.path.exists(filename):
+    if os.path.exists(filename): #verifica se o ficheiro existe o os.path.exists retorna True ou False
         with open(filename, "r") as f:
             for line in f:
-                parts = line.strip().split()
+                parts = line.strip().split() #remove espaços em branco e separa por espaço
                 if len(parts) < 2:
                     continue
                 nome = parts[0]
                 try:
-                    score = int(parts[1])
-                except ValueError:
+                    score = int(parts[1]) #tenta converter para int
+                except ValueError: #se nao for possivel converter para int, ignora a linha
                     continue
                 highscores.append((nome, score))
-    highscores = sorted(highscores, key=lambda x: x[1], reverse=True)[:TOP_N]
+    highscores = sorted(highscores, key=lambda x: x[1], reverse=True)[:TOP_N] #ordena a lista de tuplos pelo score (x[1]) em ordem decrescente e pega os TOP_N
     return highscores
 
 def atualizar_highscores(filename, score):
     # Atualiza o ficheiro de highscores com o score atual se for um dos TOP_N.
     if not filename:
         return
-    highscores = ler_highscores(filename)
-    if len(highscores) < TOP_N or score > highscores[-1][1]:
+    highscores = ler_highscores(filename)#highscores chama a funcao ler_highscores
+    if len(highscores) < TOP_N or score > highscores[-1][1]:#verifica se o score atual é maior que o menor score da lista de highscores
         nome = input("Novo Highscore! Insira o seu nome: ")
         highscores.append((nome, score))
-        highscores = sorted(highscores, key=lambda x: x[1], reverse=True)[:TOP_N]
+        highscores = sorted(highscores, key=lambda x: x[1], reverse=True)[:TOP_N]#o key = lambda x: x[1] indica que a ordenação deve ser feita pelo segundo elemento do tuplo (score)
         # Abre em modo write (cria o ficheiro se necessário)
         with open(filename, "w") as f:
             for nome, sc in highscores:
@@ -86,7 +86,7 @@ def guardar_estado_txt(filename, state):
     with open(filename, "w") as f:
         #guardar posicao do jogador
         player = state["player"]
-        f.write(f"PLAYER {player.xcor()} {player.ycor()}\n")
+        f.write(f"PLAYER {player.xcor()} {player.ycor()}\n")#formatacao f-string 10/10
         
         #guardar posicoes dos inimigos
         enemies = state["enemies"]
@@ -117,10 +117,10 @@ def guardar_estado_txt(filename, state):
 def carregar_estado_txt(filename):
     #carregar dados do ficheiro de texto savegame.txt ao iniciar o jogo
     #se o ficheiro nao existir, retorna False
-    if not filename or not os.path.exists(filename):
+    if not filename or not os.path.exists(filename):#mesmo os.path.exists da funcao ler_highscores (serve pra verificar se o ficheiro existe)
         return False
     else:
-        with open(filename, "r") as f:
+        with open(filename, "r") as f:#
             lines = f.readlines()
         enemies = []
         enemy_moves = []
@@ -130,7 +130,7 @@ def carregar_estado_txt(filename):
         player = None
 
         for line in lines:
-            line = line.strip()
+            line = line.strip()#o strip remove espaços em branco no inicio e no fim da string como usamos no ultimo teste
             if not line:  # Ignorar linhas vazias
                 continue
             
@@ -146,11 +146,11 @@ def carregar_estado_txt(filename):
             # Processar dados do jogador na primeira linha
             elif line.startswith("PLAYER"):
                 parts = line.split()
-                player = criar_entidade(float(parts[1]), float(parts[2]), "player")
+                player = criar_entidade(float(parts[1]), float(parts[2]), "player")#o criar_entidade cria o turtle do jogador usando o x e y lidos do ficheiro
             # Processar dados de inimigos
             elif section == "ENEMIES":
                 x, y = map(float, line.split())
-                enemy = criar_entidade(x, y, "enemy")
+                enemy = criar_entidade(x, y, "enemy")#mesma coisa aqui e adiante
                 enemies.append(enemy)
             # Processar movimentos dos inimigos
             elif section == "ENEMY_MOVES":
@@ -167,7 +167,7 @@ def carregar_estado_txt(filename):
                 bullet = criar_bala(x, y, "enemy")
                 enemy_bullets.append(bullet)
         
-        STATE["player"] = player
+        STATE["player"] = player #esses STATE atualizam o estado global com os dados carregados
         STATE["enemies"] = enemies
         STATE["enemy_moves"] = enemy_moves
         STATE["player_bullets"] = player_bullets
@@ -218,7 +218,7 @@ def spawn_inimigos_em_grelha(state, posicoes_existentes, dirs_existentes=None):
             enemies.append(enemy)
             enemy_moves.append(1)
 
-    # O state é atualizado com as listas de inimigos e seus movimentos
+    # O mesmo state que atualiza o estado global
     state["enemies"] = enemies
     state["enemy_moves"] = enemy_moves
     state["enemy_bullets"] = [posicoes_existentes, dirs_existentes] if posicoes_existentes else [] #restaura balas inimigas se existirem
@@ -240,7 +240,7 @@ def mover_esquerda_handler():
     #mover o jogador para a esquerda, respeitando a borda
     state = STATE
     player = state["player"]
-    new_x = player.xcor() - PLAYER_SPEED
+    new_x = player.xcor() - PLAYER_SPEED #aqui eu uso o - porque é para mover para a esquerda de acordo com o eixo x
     if new_x < -BORDA_X:
         new_x = -BORDA_X
     player.setx(new_x)
@@ -249,7 +249,7 @@ def mover_direita_handler():
     #mover o jogador para a direita, respeitando a borda
     state = STATE
     player = state["player"]
-    new_x = player.xcor() + PLAYER_SPEED
+    new_x = player.xcor() + PLAYER_SPEED #aqui eu uso o + porque é para mover para a direita de acordo com o eixo x
     if new_x > BORDA_X:
         new_x = BORDA_X
     player.setx(new_x)
@@ -258,11 +258,11 @@ def disparar_handler():
     #criar uma bala e por na lista de balas do jogador
     state = STATE
     player = state["player"]
-    bullet = criar_bala(player.xcor(), player.ycor() + 10, "player")
+    bullet = criar_bala(player.xcor(), player.ycor() + 10, "player")# o +10 é para a bala sair um pouco acima do jogador
     state["player_bullets"].append(bullet)
 
 def gravar_handler():
-    #ao precionar a tecla g, grava TODOS os dados do estado atual para um ficheiro de texto?
+    #ao precionar a tecla g, grava TODOS os dados do estado atual para um ficheiro de texto
     global STATE
     guardar_estado_txt(SAVE_FILE, STATE)
 
@@ -291,7 +291,7 @@ def atualizar_balas_player(state):
         #atualiza a posicao da bala com o speed + foward
         bullet.forward(PLAYER_BULLET_SPEED)
         #se a bala sair do ecra, remove-a da lista e esconde-a
-        if bullet.ycor() > BORDA_Y:
+        if bullet.ycor() > BORDA_Y: #perceba que eu so usei o > que a borda y porque a bala do jogador so sobe
             bullet.hideturtle()
             state["player_bullets"].remove(bullet)
 
@@ -301,7 +301,7 @@ def atualizar_balas_inimigos(state):
         # Atualiza a posição da bala com o speed + forward
         bullet.forward(ENEMY_BULLET_SPEED)
         # Se a bala sair do ecrã, remove-a da lista e esconde-a
-        if bullet.ycor() < -BORDA_Y:
+        if bullet.ycor() < -BORDA_Y: #mesma coisa aqui porque a bala do inimigo so desce
             bullet.hideturtle()
             state["enemy_bullets"].remove(bullet)
 
@@ -309,7 +309,7 @@ def atualizar_inimigos(state):
     enemies = state["enemies"]
     enemy_moves = state["enemy_moves"]
     
-    for i, enemy in enumerate(enemies):
+    for i, enemy in enumerate(enemies): #usei o enumerate para obter o índice e o inimigo na mesma iteração
         # Move o inimigo para baixo constantemente
         enemy.sety(enemy.ycor() - ENEMY_FALL_SPEED)
         
@@ -379,7 +379,7 @@ def inimigo_chegou_ao_fundo(state):
     state = STATE
     enemies = state["enemies"]
     for enemy in enemies:
-        if enemy.ycor() <= -BORDA_Y + ENEMY_SIZE:
+        if enemy.ycor() <= -BORDA_Y + ENEMY_SIZE: #o -borda_y porque o inimigo desce e + ENEMY_SIZE para considerar o tamanho do inimigo por isso os dois juntos
             return True
     return False
 
