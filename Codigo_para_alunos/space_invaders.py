@@ -4,6 +4,12 @@ import time
 import os
 import sys
 
+#==========================
+#integrantes do grupo:
+#João Vitor Alves 2016122878
+#João Mesquita Lucas 2025249853
+#==========================
+
 # =========================
 # Parâmetros / Constantes
 # =========================
@@ -34,15 +40,11 @@ TOP_N = 10
 
 STATE = None  # usado apenas para callbacks do teclado
 
-#ao terminar uma implementacao usar o # no lugar do print
-
 # =========================
 # Top Resultados (Highscores)
 # =========================
 def ler_highscores(filename):
     # Ler o ficheiro de highscores e retornar uma lista de tuplos (nome, score).
-    # Função robusta: ignora linhas mal formadas e não tenta fechar um ficheiro
-    # que já foi fechado (removida chamada incorreta a f.close()).
     highscores = []
     if not filename:
         return highscores
@@ -63,7 +65,6 @@ def ler_highscores(filename):
 
 def atualizar_highscores(filename, score):
     # Atualiza o ficheiro de highscores com o score atual se for um dos TOP_N.
-    # Não assume que o ficheiro exista; ler_highscores já é robusto.
     if not filename:
         return
     highscores = ler_highscores(filename)
@@ -80,9 +81,8 @@ def atualizar_highscores(filename, score):
 # Guardar / Carregar estado (texto)
 # =========================
 def guardar_estado_txt(filename, state):
-    #print("[guardar_estado_txt] por implementar")
     #guardar dados no ficheiro de texto savegame.txt ao pressionar a tecla g
-    #criar um ficheiro com o nome filename e guardar os dados do state nele
+    #criar um ficheiro com o nome do filename e guardar os dados do state nele
     with open(filename, "w") as f:
         #guardar posicao do jogador
         player = state["player"]
@@ -115,7 +115,6 @@ def guardar_estado_txt(filename, state):
     # O 'with' já fecha o ficheiro; não é necessário chamar f.close()
 
 def carregar_estado_txt(filename):
-    #print("[carregar_estado_txt] por implementar")
     #carregar dados do ficheiro de texto savegame.txt ao iniciar o jogo
     #se o ficheiro nao existir, retorna False
     if not filename or not os.path.exists(filename):
@@ -219,25 +218,26 @@ def spawn_inimigos_em_grelha(state, posicoes_existentes, dirs_existentes=None):
             enemies.append(enemy)
             enemy_moves.append(1)
 
+    # O state é atualizado com as listas de inimigos e seus movimentos
     state["enemies"] = enemies
     state["enemy_moves"] = enemy_moves
-    state["enemy_bullets"] = [posicoes_existentes, dirs_existentes] if posicoes_existentes else []
+    state["enemy_bullets"] = [posicoes_existentes, dirs_existentes] if posicoes_existentes else [] #restaura balas inimigas se existirem
     return
 
 
 def restaurar_balas(state, lista_pos, tipo):
-    #print("[restaurar_balas] por implementar")
     #restaura balas a partir de lista de posições
     if tipo == "enemy":
-        state["enemy_bullets"] = [pos for pos in lista_pos]
+        state["enemy_bullets"] = [pos for pos in lista_pos]#dos inimigos
     elif tipo == "player":
-        state["player_bullets"] = [pos for pos in lista_pos]
+        state["player_bullets"] = [pos for pos in lista_pos]#do jogador
     return
 
 # =========================
 # Handlers de tecla 
 # =========================
 def mover_esquerda_handler():
+    #mover o jogador para a esquerda, respeitando a borda
     state = STATE
     player = state["player"]
     new_x = player.xcor() - PLAYER_SPEED
@@ -246,6 +246,7 @@ def mover_esquerda_handler():
     player.setx(new_x)
 
 def mover_direita_handler():
+    #mover o jogador para a direita, respeitando a borda
     state = STATE
     player = state["player"]
     new_x = player.xcor() + PLAYER_SPEED
@@ -261,14 +262,12 @@ def disparar_handler():
     state["player_bullets"].append(bullet)
 
 def gravar_handler():
-    #print("[gravar_handler] por implementar")
     #ao precionar a tecla g, grava TODOS os dados do estado atual para um ficheiro de texto?
     global STATE
     guardar_estado_txt(SAVE_FILE, STATE)
 
 def terminar_handler():
     # Fecha o jogo e atualiza os highscores antes de sair.
-    # Usa a variável global STATE corretamente e trata exceções.
     global STATE
     if STATE is not None:
         # Tenta atualizar highscores (cria o ficheiro se necessário)
@@ -288,7 +287,6 @@ def terminar_handler():
 # Atualizações e colisões
 # =========================
 def atualizar_balas_player(state):
-    #print("[atualizar_balas_player] por implementar")
     for bullet in state["player_bullets"]:
         #atualiza a posicao da bala com o speed + foward
         bullet.forward(PLAYER_BULLET_SPEED)
@@ -299,7 +297,6 @@ def atualizar_balas_player(state):
 
 
 def atualizar_balas_inimigos(state):
-    #print("[atualizar_balas_inimigos] por implementar")
     for bullet in state["enemy_bullets"]:
         # Atualiza a posição da bala com o speed + forward
         bullet.forward(ENEMY_BULLET_SPEED)
@@ -309,7 +306,6 @@ def atualizar_balas_inimigos(state):
             state["enemy_bullets"].remove(bullet)
 
 def atualizar_inimigos(state):
-    #print("[atualizar_inimigos] por implementar")
     enemies = state["enemies"]
     enemy_moves = state["enemy_moves"]
     
@@ -341,7 +337,6 @@ def atualizar_inimigos(state):
     return
 
 def inimigos_disparam(state):
-    #print("[inimigos_disparam] por implementar")
     enemies = state["enemies"]
     for enemy in enemies:
         if random.random() < ENEMY_FIRE_PROB:
@@ -350,7 +345,6 @@ def inimigos_disparam(state):
     return
 
 def verificar_colisoes_player_bullets(state):
-    #print("[verificar_colisoes_player_bullets] por implementar")
     #verifica se alguma bala do jogador colidiu com algum inimigo
     state = STATE
     player_bullets = state["player_bullets"]
@@ -369,7 +363,6 @@ def verificar_colisoes_player_bullets(state):
 
 
 def verificar_colisoes_enemy_bullets(state):
-    #print("[verificar_colisoes_enemy_bullets] por implementar")
     state = STATE
     player = state["player"]
     enemy_bullets = state["enemy_bullets"]
@@ -383,7 +376,6 @@ def verificar_colisoes_enemy_bullets(state):
     return False  # Retorna False se não houve colisão
 
 def inimigo_chegou_ao_fundo(state):
-    #print("[inimigo_chegou_ao_fundo] por implementar")
     state = STATE
     enemies = state["enemies"]
     for enemy in enemies:
@@ -392,7 +384,6 @@ def inimigo_chegou_ao_fundo(state):
     return False
 
 def verificar_colisao_player_com_inimigos(state):
-    #print("[verificar_colisao_player_com_inimigos] por implementar")
     state = STATE
     player = state["player"]
     enemies = state["enemies"]
@@ -443,8 +434,8 @@ if __name__ == "__main__":
     STATE = state
 
     # Construção inicial
-    loaded = carregar_estado_txt(filename)
-    if loaded:
+    loaded = carregar_estado_txt(filename)#tenta carregar o estado do ficheiro//so estava funcionando aqui//
+    if loaded:#verificacao do loaded
         print("Jogo carregado!")
     else:
         print("New game!")
